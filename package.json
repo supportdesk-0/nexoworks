@@ -4,9 +4,20 @@
   "description": "Plataforma de comunicación interna empresarial",
   "private": true,
   "scripts": {
-    "dev": "cd backend && npm run dev",
-    "install:all": "cd backend && npm install",
-    "build": "echo 'No build step needed — frontend uses CDN React'"
+    "start": "node backend/src/app.js",
+    "dev": "nodemon backend/src/app.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.11.3",
+    "serverless-http": "^3.2.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
   },
   "engines": {
     "node": ">=18.0.0"
