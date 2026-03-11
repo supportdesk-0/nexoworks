@@ -1,0 +1,53 @@
+# ═══════════════════════════════════════════════════════════
+#  NEXOWORK — netlify.toml
+#  Configures build settings and redirects for Netlify
+# ═══════════════════════════════════════════════════════════
+
+[build]
+  # Frontend files are in /frontend
+  publish = "frontend"
+
+  # If you add a build step (e.g. bundler), set command here.
+  # For pure CDN React (no bundler needed), leave empty.
+  command = ""
+
+# ── Redirects ───────────────────────────────────────────────
+# SPA fallback: all routes -> index.html
+[[redirects]]
+  from   = "/*"
+  to     = "/index.html"
+  status = 200
+
+# ── Serverless Functions ──────────────────────────────────────
+# Express API routes are wrapped as Netlify Functions
+# Access via: https://your-site.netlify.app/.netlify/functions/api/...
+[functions]
+  directory = "netlify/functions"
+
+# ── Headers ─────────────────────────────────────────────────
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options        = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy        = "strict-origin-when-cross-origin"
+    Permissions-Policy     = "camera=*, microphone=*"
+
+# Allow camera/mic for WebRTC (required)
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Feature-Policy = "camera *; microphone *"
+
+# ── Environment Variables ─────────────────────────────────────
+# Set these in Netlify Dashboard → Site Settings → Environment Variables
+# Do NOT commit real values here. This is just documentation.
+#
+# FIREBASE_API_KEY=...
+# FIREBASE_AUTH_DOMAIN=...
+# FIREBASE_PROJECT_ID=...
+# FIREBASE_STORAGE_BUCKET=...
+# FIREBASE_MESSAGING_SENDER_ID=...
+# FIREBASE_APP_ID=...
+# JWT_SECRET=...
+# POSTGRES_URL=...  (if using PostgreSQL instead of Firestore)

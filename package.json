@@ -1,0 +1,14 @@
+{
+  "name": "nexowork",
+  "version": "1.0.0",
+  "description": "Plataforma de comunicación interna empresarial",
+  "private": true,
+  "scripts": {
+    "dev": "cd backend && npm run dev",
+    "install:all": "cd backend && npm install",
+    "build": "echo 'No build step needed — frontend uses CDN React'"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
