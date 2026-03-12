@@ -1,9 +1,3 @@
-// ═══════════════════════════════════════════════════════════
-//  NEXOWORK — Main React Application
-//  100% Firebase real-time: mensajes, usuarios, anuncios
-//  WebRTC para videollamadas
-// ═══════════════════════════════════════════════════════════
-
 const { useState, useEffect, useRef } = React;
 
 const CHANNELS = [
@@ -100,7 +94,6 @@ function AuthScreen({ onLogin }) {
           {[
             { icon: "💬", text: "Chat en tiempo real — todos se ven al instante" },
             { icon: "👥", text: "Ver quién está en línea en tu equipo" },
-            { icon: "📹", text: "Videollamadas con WebRTC — sin plugins" },
             { icon: "📢", text: "Anuncios corporativos para todos" },
           ].map((f, i) => (
             <div key={i} className="auth-feature">
@@ -152,7 +145,6 @@ function Sidebar({ active, setActive, activeChannel, setActiveChannel, currentUs
   const navItems = [
     { id: "dashboard",     icon: "🏠", label: "Dashboard" },
     { id: "chat",          icon: "💬", label: "Mensajes" },
-    { id: "videocall",     icon: "📹", label: "Videollamadas" },
     { id: "files",         icon: "📁", label: "Archivos" },
     { id: "announcements", icon: "📢", label: "Anuncios" },
     { id: "admin",         icon: "⚙️", label: "Administración" },
@@ -409,103 +401,6 @@ function ChatView({ activeChannel, currentUser, allUsers }) {
             <div className="member-name">{u.name?.split(" ")[0]}</div>
           </div>
         ))}
-      </div>
-    </div>
-  );
-}
-
-// ─── Video Call (WebRTC) ──────────────────────────────────────
-function VideoCallView({ currentUser, onlineUsers }) {
-  const [inCall, setInCall]           = useState(false);
-  const [camOn, setCamOn]             = useState(true);
-  const [micOn, setMicOn]             = useState(true);
-  const [screenShare, setScreenShare] = useState(false);
-  const [elapsed, setElapsed]         = useState(0);
-  const localVideoRef = useRef(null);
-  const streamRef     = useRef(null);
-  const timerRef      = useRef(null);
-
-  const startCall = async () => {
-    setInCall(true); setElapsed(0);
-    timerRef.current = setInterval(() => setElapsed(s => s + 1), 1000);
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-      streamRef.current = stream;
-      if (localVideoRef.current) localVideoRef.current.srcObject = stream;
-    } catch (e) { console.warn("Cámara no disponible:", e.message); }
-  };
-
-  const endCall = () => {
-    setInCall(false); clearInterval(timerRef.current);
-    if (streamRef.current) { streamRef.current.getTracks().forEach(t => t.stop()); streamRef.current = null; }
-  };
-
-  const toggleCam = () => { if (streamRef.current) streamRef.current.getVideoTracks().forEach(t => t.enabled = !camOn); setCamOn(c => !c); };
-  const toggleMic = () => { if (streamRef.current) streamRef.current.getAudioTracks().forEach(t => t.enabled = !micOn); setMicOn(m => !m); };
-  const toggleScreen = async () => {
-    try {
-      if (!screenShare) {
-        const s = await navigator.mediaDevices.getDisplayMedia({ video: true });
-        if (localVideoRef.current) localVideoRef.current.srcObject = s;
-        setScreenShare(true);
-        s.getVideoTracks()[0].onended = () => { setScreenShare(false); if (streamRef.current && localVideoRef.current) localVideoRef.current.srcObject = streamRef.current; };
-      } else { setScreenShare(false); if (streamRef.current && localVideoRef.current) localVideoRef.current.srcObject = streamRef.current; }
-    } catch (e) { setScreenShare(false); }
-  };
-
-  useEffect(() => () => { clearInterval(timerRef.current); if (streamRef.current) streamRef.current.getTracks().forEach(t => t.stop()); }, []);
-  const fmt = s => `${String(Math.floor(s/60)).padStart(2,"0")}:${String(s%60).padStart(2,"0")}`;
-
-  if (!inCall) return (
-    <div className="content-area">
-      <div className="page-header">
-        <div><h1 className="page-title">Videollamadas</h1><p className="page-sub">Reuniones en tiempo real</p></div>
-        <button className="btn-action" onClick={startCall}>📹 Iniciar Videollamada</button>
-      </div>
-      <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: 16, padding: 24, marginBottom: 20 }}>
-        <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)", marginBottom: 16 }}>👥 Disponibles ahora mismo</div>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
-          {onlineUsers.map(u => (
-            <div key={u.id} style={{ display: "flex", alignItems: "center", gap: 8, background: "var(--bg-elevated)", border: "1px solid var(--border)", borderRadius: 10, padding: "8px 14px" }}>
-              <Avatar user={u} size={28} />
-              <div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>{u.name}</div>
-                <div style={{ fontSize: 11, color: "#10B981" }}>● En línea</div>
-              </div>
-            </div>
-          ))}
-          {onlineUsers.length === 0 && <div style={{ fontSize: 13, color: "var(--text-muted)" }}>Nadie más en línea ahora.</div>}
-        </div>
-      </div>
-    </div>
-  );
-
-  return (
-    <div className="video-room">
-      <div className="video-header">
-        <span className="video-title">Videollamada en curso</span>
-        <span style={{ color: "var(--text-secondary)", fontSize: 13 }}><span className="recording-dot" /> {fmt(elapsed)}</span>
-      </div>
-      <div className={`video-grid count-${Math.max(onlineUsers.length + 1, 1)}`}>
-        <div className="video-tile speaking">
-          <video ref={localVideoRef} autoPlay muted playsInline className="local-video" style={{ display: camOn ? "block" : "none" }} />
-          {!camOn && <Avatar user={currentUser} size={60} showStatus={false} />}
-          <div className="video-tile-name">{currentUser.name} (Tú)</div>
-          <span className="speaking-badge">Tú</span>
-        </div>
-        {onlineUsers.filter(u => u.id !== currentUser.id).map(u => (
-          <div key={u.id} className="video-tile">
-            <Avatar user={u} size={60} showStatus={false} />
-            <div className="video-tile-name">{u.name}</div>
-            <div className="video-tile-role">{u.role || "Empleado"}</div>
-          </div>
-        ))}
-      </div>
-      <div className="video-controls">
-        <button className={`ctrl-btn ${!micOn ? "active-btn" : ""}`} onClick={toggleMic}><span className="ctrl-icon">{micOn ? "🎤" : "🔇"}</span><span className="ctrl-label">{micOn ? "Silenciar" : "Activar"}</span></button>
-        <button className={`ctrl-btn ${!camOn ? "active-btn" : ""}`} onClick={toggleCam}><span className="ctrl-icon">{camOn ? "📹" : "📷"}</span><span className="ctrl-label">{camOn ? "Apagar" : "Encender"}</span></button>
-        <button className={`ctrl-btn ${screenShare ? "active-btn" : ""}`} onClick={toggleScreen}><span className="ctrl-icon">🖥️</span><span className="ctrl-label">{screenShare ? "Detener" : "Compartir"}</span></button>
-        <button className="end-call-btn" onClick={endCall}>Salir</button>
       </div>
     </div>
   );
@@ -777,7 +672,6 @@ function App() {
     switch(activeSection) {
       case "dashboard":     return <Dashboard currentUser={currentUser} onlineUsers={onlineUsers} recentMessages={recentMessages} />;
       case "chat":          return <ChatView activeChannel={activeChannel} currentUser={currentUser} allUsers={allUsers} />;
-      case "videocall":     return <VideoCallView currentUser={currentUser} onlineUsers={onlineUsers} />;
       case "files":         return <FilesView currentUser={currentUser} />;
       case "announcements": return <AnnouncementsView currentUser={currentUser} allUsers={allUsers} />;
       case "admin":         return <AdminView allUsers={allUsers} />;
